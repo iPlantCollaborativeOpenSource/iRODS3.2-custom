@@ -1119,19 +1119,35 @@ int checkObjIdByTicket(char *dataId, char *accessLevel,
       cVal[6]=writeFileLimit;
       cVal[7]=writeByteCount;
       cVal[8]=writeByteLimit;
-      status = cmlGetStringValuesFromSql(
-	    "select ticket_id, uses_limit, uses_count, ticket_expiry_ts, restrictions, write_file_count, write_file_limit, write_byte_count, write_byte_limit from R_TICKET_MAIN TM, R_DATA_MAIN DM where TM.ticket_type = 'write' and TM.ticket_string = ? and (TM.object_id=? or (TM.object_id=DM.coll_id and DM.data_id=?))",
-	    cVal, iVal, 9, 
-	    ticketStr, dataId, dataId, icss);
 
+      char query [] =
+    		  "select ticket_id,"
+    		  "       uses_limit,"
+    		  "       uses_count,"
+    		  "       ticket_expiry_ts,"
+    		  "       restrictions,"
+              "       write_file_count,"
+              "       write_file_limit,"
+              "       write_byte_count,"
+              "       write_byte_limit"
+              "  from R_TICKET_MAIN"
+              "  where ticket_type = 'write'"
+              "    and ticket_string = ?"
+              "    and (object_id = ?"
+              "         or object_id in (select coll_id from R_DATA_MAIN where data_id = ?))";
+      status = cmlGetStringValuesFromSql(query, cVal, iVal, 9, ticketStr, dataId, dataId, icss);
    }
    else {
       /* don't check ticket type, 'read' or 'write' is fine */
       if (logSQL_CML!=0) rodsLog(LOG_SQL, "checkObjIdByTicket SQL 2 ");
-      status = cmlGetStringValuesFromSql(
-	    "select ticket_id, uses_limit, uses_count, ticket_expiry_ts, restrictions from R_TICKET_MAIN TM, R_DATA_MAIN DM where TM.ticket_string = ? and (TM.object_id=? or (TM.object_id=DM.coll_id and DM.data_id=?))",
-	    cVal, iVal, 5, 
-	    ticketStr, dataId, dataId, icss);
+
+      char query [] =
+    		  "select ticket_id, uses_limit, uses_count, ticket_expiry_ts, restrictions"
+    		  "  from R_TICKET_MAIN"
+    		  "  where ticket_string = ?"
+    		  "    and (object_id = ? "
+    		  "         or object_id in (select coll_id from R_DATA_MAIN where data_id = ?))";
+      status = cmlGetStringValuesFromSql(query, cVal, iVal, 5, ticketStr, dataId, dataId, icss);
    }
 
    if (status != 0) return (CAT_TICKET_INVALID);
@@ -1251,10 +1267,15 @@ cmlTicketUpdateWriteBytes(char *ticketStr,
    cVal[2]=writeByteLimit;
    
    if (logSQL_CML!=0) rodsLog(LOG_SQL, "cmlTicketUpdateWriteBytes SQL 1 ");
-   status = cmlGetStringValuesFromSql(
-      "select ticket_id, write_byte_count, write_byte_limit from R_TICKET_MAIN TM, R_DATA_MAIN DM where TM.ticket_type = 'write' and TM.ticket_string = ? and (TM.object_id=? or (TM.object_id=DM.coll_id and DM.data_id=?))",
-      cVal, iVal, 3, 
-      ticketStr, objectId, objectId, icss);
+
+   char query [] =
+		   "select ticket_id, write_byte_count, write_byte_limit"
+		   "  from R_TICKET_MAIN"
+		   "  where ticket_type = 'write'"
+		   "    and tikcet_string = ?"
+		   "    and (object_id = ?"
+		   "         or object_id in (select coll_id from R_DATA_MAIN where data_id = ?))";
+   status = cmlGetStringValuesFromSql(query, cVal, iVal, 3, ticketStr, objectId, objectId, icss);
    if (status != 0) return(status);
    iWriteByteLimit = atoll(writeByteLimit);
    iWriteByteCount = atoll(writeByteCount);
