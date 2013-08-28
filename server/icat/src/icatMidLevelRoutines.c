@@ -1272,7 +1272,7 @@ cmlTicketUpdateWriteBytes(char *ticketStr,
 		   "select ticket_id, write_byte_count, write_byte_limit"
 		   "  from R_TICKET_MAIN"
 		   "  where ticket_type = 'write'"
-		   "    and tikcet_string = ?"
+		   "    and ticket_string = ?"
 		   "    and (object_id = ?"
 		   "         or object_id in (select coll_id from R_DATA_MAIN where data_id = ?))";
    status = cmlGetStringValuesFromSql(query, cVal, iVal, 3, ticketStr, objectId, objectId, icss);
